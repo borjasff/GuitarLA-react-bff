@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react"
 import 
     { 
         Meta,
@@ -50,9 +51,65 @@ export function links(){
 }
 
 export default function App(){
+    const cartLS = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('cart') )?? [] : null;
+    const [cart, setCart] = useState(cartLS)
+
+
+    // UseEffect para grabar en el LS
+useEffect(() => {
+        if (cart?.length === 0) return;
+        localStorage.setItem('cart', JSON.stringify(cart));
+    }, [cart]);
+    
+    // useEffect para cargar el state con info del LS
+    useEffect(() => {
+        const cartLS = JSON.parse(localStorage.getItem('cart')) ?? [];
+        setCart(cartLS);
+    }, []);
+
+    const addCart = guitar => {
+        if(cart.some(guitarState => guitarState.id === guitar.id)){
+            //iterator about array, and identify the elemnt duplicate
+            const cartUpdate = cart.map(guitarState => {
+                if(guitarState.id === guitar.id){
+                    //rewrite quantity
+                    guitarState.quantity += guitar.quantity
+                }
+                return guitarState
+            })
+            //add to the cart
+            setCart(cartUpdate)
+        } else {
+            //new register
+            setCart([...cart, guitar])
+        }
+    }
+
+    const updateQuantity = guitar => {
+        const cartUpdate = cart.map(guitarState => {
+            if(guitarState.id === guitar.id){
+                guitarState.quantity = guitar.quantity
+            }
+            return guitarState
+        })
+        setCart(cartUpdate)
+    }
+    const deleteGuitar = id => {
+        const cartUpdate = cart.filter(guitarState => guitarState.id !== id)
+        cartUpdate.length === 0 && localStorage.setItem('cart', '[]');
+        setCart(cartUpdate)
+    }
+
     return(
         <Document>
-            <Outlet/>
+            <Outlet
+            context={{
+                addCart,
+                cart,
+                updateQuantity,
+                deleteGuitar
+            }}
+            />
         </Document> 
     )
 }
